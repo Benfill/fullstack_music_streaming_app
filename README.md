@@ -183,7 +183,7 @@ This repository contains a complete full-stack music streaming application built
 
 ## Project Links
 
-- [Jira]([https://benfill.atlassian.net/jira/software/projects/MEZ/boards/435?atlOrigin=eyJpIjoiOGNiZTYyMTcyYTVhNDQ1Y2I3NThiZmZlNjVkNmI1NGMiLCJwIjoiaiJ9](https://benfill.atlassian.net/jira/software/projects/MUS/boards/469?issueParent=11434&sprintStarted=true&atlOrigin=eyJpIjoiYzcwMjFjOTJiMjc5NDZiMzg4ZGYyZTg4NWJkMTM4NjAiLCJwIjoiaiJ9))
+- [Jira](https://benfill.atlassian.net/jira/software/projects/MUS/boards/469?issueParent=11434&sprintStarted=true&atlOrigin=eyJpIjoiYzcwMjFjOTJiMjc5NDZiMzg4ZGYyZTg4NWJkMTM4NjAiLCJwIjoiaiJ9)
 - [Figma](https://www.figma.com/design/2pgt3vqyOYVAeKDhnDywmJ/SongCloud?node-id=0-1&t=SxhUm7kI4SoEGwJZ-1)
 
 ---
