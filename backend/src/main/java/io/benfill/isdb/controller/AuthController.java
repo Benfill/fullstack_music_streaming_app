@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.benfill.isdb.dto.request.LoginDto;
 import io.benfill.isdb.dto.request.UserDtoReq;
+import io.benfill.isdb.dto.response.DeleteResp;
 import io.benfill.isdb.service.IAuthService;
 
 @RestController
@@ -31,4 +32,9 @@ public class AuthController {
 		return ResponseEntity.ok(authService.loginHandler(body, resp));
 	}
 
+	@PostMapping("/logout")
+	public ResponseEntity<?> logout(HttpServletResponse resp) {
+		DeleteResp message = authService.logoutHandler(resp);
+		return ResponseEntity.ok(message);
+	}
 }

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -82,5 +83,12 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(CustomDuplicateKeyException.class)
 	public ResponseEntity<?> handleDuplicateKeyException(CustomDuplicateKeyException ex) {
 		return ResponseEntity.status(HttpStatus.CONFLICT).body("A record with this username already exists");
+	}
+
+	@ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+	public ExceptionMessage handleHttpMediaTypeNotAcceptableException(HttpMediaTypeNotAcceptableException ex) {
+		ExceptionMessage message = ExceptionMessage.builder().error(HttpStatus.NOT_ACCEPTABLE.toString())
+				.message(ex.getMessage()).status(HttpStatus.NOT_ACCEPTABLE.value()).time(LocalDate.now()).build();
+		return message;
 	}
 }

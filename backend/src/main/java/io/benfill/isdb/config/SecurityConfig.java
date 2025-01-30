@@ -34,26 +34,17 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain configure(HttpSecurity http) throws Exception {
-		http
-				// Disable CSRF for registration (be cautious in production)
-				.csrf().disable()
-
-				// Configure authentication
-				.httpBasic()
-
-				// Authorize requests
-				.and().authorizeRequests().antMatchers("/api/auth/**").permitAll().antMatchers("/api/user/**")
-				.hasAnyRole("USER", "ADMIN").antMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated()
-
-				// Session management
-				.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-
-				// Exception handling
-				.and().exceptionHandling()
+		http.csrf().disable().httpBasic().and().authorizeRequests().antMatchers("/api/auth/**").permitAll()
+				.antMatchers("/api/user/**").hasAnyRole("USER", "ADMIN").antMatchers("/api/admin/**").hasRole("ADMIN")
+				.anyRequest().authenticated().and().sessionManagement()
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().exceptionHandling()
 				.authenticationEntryPoint((request, response, authException) -> response
 						.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
-				.and().addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
-		;
+				.and().logout().logoutUrl("/api/auth/logout")
+				.logoutSuccessHandler((request, response, authentication) -> {
+					response.setStatus(HttpServletResponse.SC_OK);
+				}).deleteCookies("Authorization").clearAuthentication(true).invalidateHttpSession(true).and()
+				.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}

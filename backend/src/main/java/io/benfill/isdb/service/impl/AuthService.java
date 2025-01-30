@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import io.benfill.isdb.dto.request.LoginDto;
 import io.benfill.isdb.dto.request.UserDtoReq;
+import io.benfill.isdb.dto.response.DeleteResp;
 import io.benfill.isdb.dto.response.UserDtoResp;
 import io.benfill.isdb.exception.CustomDuplicateKeyException;
 import io.benfill.isdb.exception.ResourceNotFoundException;
@@ -116,4 +117,26 @@ public class AuthService implements IAuthService {
 				.roles(savedUser.getRoles()).build();
 	}
 
+	@Override
+	public DeleteResp logoutHandler(HttpServletResponse response) {
+		try {
+			// Clear the JWT cookie
+			Cookie logoutCookie = new Cookie("Authorization", null);
+			logoutCookie.setMaxAge(0);
+			logoutCookie.setPath("/");
+			logoutCookie.setHttpOnly(true);
+			logoutCookie.setSecure(true);
+			logoutCookie.setDomain(null); // Clear domain if set
+
+			response.addCookie(logoutCookie);
+
+			// Clear any session-related attributes if they exist
+			SecurityContextHolder.clearContext();
+
+			return DeleteResp.builder().message("Successfully logged out").build();
+
+		} catch (Exception e) {
+			return DeleteResp.builder().message("Could not process logout request").build();
+		}
+	}
 }
