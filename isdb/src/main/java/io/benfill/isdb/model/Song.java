@@ -1,5 +1,6 @@
 package io.benfill.isdb.model;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 
 import javax.validation.constraints.NotBlank;
@@ -23,30 +24,33 @@ import lombok.Setter;
 @Setter
 @Builder
 public class Song {
-	@Id
-	private String id;
+    @Id
+    private String id;
 
-	@NotBlank(message = "Song's title is required")
-	@NotNull(message = "Song's title is required")
-	@Field()
-	private String title;
+    @NotBlank(message = "Song's title is required")
+    @NotNull(message = "Song's title is required")
+    @Field()
+    private String title;
 
-	@NotNull(message = "Song's duration is required")
-	@Field()
-	private Integer duration;
+    @NotNull(message = "Song's duration is required")
+    @Field()
+    private Integer duration;
 
-	@NotNull(message = "Song's number is required")
-	@Field()
-	private Integer number;
+    @NotNull(message = "Song's number is required")
+    @Field()
+    private Integer number;
 
-	@JsonBackReference
-	@Field()
-	@DBRef
-	private Album album;
+    @JsonBackReference
+    @Field()
+    @DBRef
+    private Album album;
 
-	@CreatedDate
-	private LocalDateTime createdAt;
+    @Field()
+    private String fileId;
 
-	@LastModifiedDate
-	private LocalDateTime updatedAt;
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 }
