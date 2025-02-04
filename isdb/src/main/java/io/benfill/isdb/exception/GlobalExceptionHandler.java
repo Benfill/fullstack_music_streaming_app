@@ -1,6 +1,7 @@
 package io.benfill.isdb.exception;
 
 import java.io.IOException;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ExceptionMessage resourceNotFoundExceptionHandler(ResourceNotFoundException exception) {

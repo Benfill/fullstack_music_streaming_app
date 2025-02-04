@@ -25,4 +25,18 @@ public class SongDtoResp {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+  
+	private String ID;
+
+	private String title;
+
+	private Integer duration;
+
+	private Integer number;
+
+	private Album album;
+
+	private LocalDateTime createdAt;
+
+	private LocalDateTime updatedAt;
 }

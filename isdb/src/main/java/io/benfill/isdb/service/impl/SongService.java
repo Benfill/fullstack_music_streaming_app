@@ -162,6 +162,6 @@ public class SongService implements ISongService {
 	Pageable pageable = PageRequest.of(page, size);
 	List<Song> songs = repository.findByTitleLike("%" + query + "%", pageable);
 	return mapper.entitiesToDtos(songs);
-    }
+  }
 
 }

@@ -1,7 +1,6 @@
 package io.benfill.isdb.controller;
 
 import java.io.IOException;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,4 +82,45 @@ public class SongController {
 	    @RequestParam(defaultValue = "0", name = "page") Integer page) {
 	return ResponseEntity.ok(service.search(query, page));
     }
+
+	@Autowired
+	private ISongService service;
+
+	@Secured("ROLE_USER")
+	@GetMapping("/user/Songs")
+	public ResponseEntity<?> index(@RequestParam(defaultValue = "0", name = "page") Integer page) {
+		return ResponseEntity.ok(service.getAll(page));
+	}
+
+	@Secured("ROLE_USER")
+	@GetMapping("/user/songs/{id}")
+	public ResponseEntity<?> show(@PathVariable String id) {
+		return ResponseEntity.ok(service.getDetails(id));
+	}
+
+	@Secured("ROLE_ADMIN")
+	@PostMapping("/admin/songs")
+	public ResponseEntity<?> store(@RequestBody @Valid SongDtoReq dto) {
+		return ResponseEntity.status(HttpStatus.CREATED).body(service.create(dto));
+	}
+
+	@Secured("ROLE_ADMIN")
+	@PutMapping("/admin/songs/{id}")
+	public ResponseEntity<?> update(@RequestBody @Valid SongDtoReq dto, @PathVariable String id) {
+		return ResponseEntity.ok(service.update(dto, id));
+	}
+
+	@Secured("ROLE_ADMIN")
+	@DeleteMapping("/admin/songs")
+	public ResponseEntity<?> delete(@PathVariable String id) {
+		service.delete(id);
+		return ResponseEntity.ok(DeleteResp.builder().message("Song deleted successfully"));
+	}
+
+	@Secured("ROLE_USER")
+	@GetMapping("/user/songs/search")
+	public ResponseEntity<?> searchBy(@RequestParam(name = "q") String query,
+			@RequestParam(defaultValue = "0", name = "page") Integer page) {
+		return ResponseEntity.ok(service.search(query, page));
+	}
 }

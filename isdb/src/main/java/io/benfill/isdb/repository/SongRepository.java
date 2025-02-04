@@ -13,4 +13,5 @@ public interface SongRepository extends MongoRepository<Song, String> {
     List<Song> findByTitleLike(String title, Pageable pageable);
 
     List<Song> findByAlbumId(String albumId);
+
 }

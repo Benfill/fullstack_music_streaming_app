@@ -12,6 +12,7 @@ import com.mongodb.client.MongoClients;
 
 @Configuration
 @EnableMongoRepositories(basePackages = "io.benfill.isdb.repository")
+
 public class MongoConfig extends AbstractMongoClientConfiguration {
 
     @Value("${spring.data.mongodb.uri:mongodb://localhost:27017}")
@@ -35,4 +36,21 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     protected String getDatabaseName() {
 	return databaseName;
     }
+public class MongoConfig {
+
+	@Value("${spring.data.mongodb.uri:mongodb://localhost:27017}")
+	private String mongoUri;
+
+	@Value("${spring.data.mongodb.database:isdb}")
+	private String databaseName;
+
+	@Bean
+	public MongoClient mongoClient() {
+		return MongoClients.create(mongoUri);
+	}
+
+	@Bean
+	public MongoTemplate mongoTemplate() {
+		return new MongoTemplate(mongoClient(), databaseName);
+	}
 }
