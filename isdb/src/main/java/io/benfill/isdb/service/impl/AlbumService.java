@@ -38,7 +38,7 @@ public class AlbumService implements IAlbumService {
 
     @Override
     public List<AlbumDtoResp> getAll(Integer page) {
-	int size = 3;
+	int size = 10;
 	Pageable pageable = PageRequest.of(page, size);
 	List<Album> albums = repository.findAll(pageable).getContent();
 	return mapper.entitiesToDtos(albums).stream().map(a -> {

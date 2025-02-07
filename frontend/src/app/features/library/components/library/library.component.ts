@@ -1,71 +1,45 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { loadTracks, filterTracks, sortTracks } from '../../store/library.actions';
-import { selectTracks, selectLoading } from '../../store/library.selectors';
+import * as LibrarySelectors from '../../store/library.selectors';
+import * as PlayerActions from '../../../../store/player/player.actions';
+import * as LibraryActions from '../../store/library.actions';
 
 @Component({
   selector: 'app-library',
-  template: `
-    <div class="container mx-auto px-4 py-8">
-      <h1 class="text-3xl font-bold mb-6 dark:text-white">My Library</h1>
-
-      <div class="mb-6 flex justify-between items-center">
-        <app-search-bar
-          (search)="onSearch($event)"
-          class="w-64"
-        ></app-search-bar>
-
-        <app-filter-bar
-          [categories]="categories"
-          (filterChange)="onFilterChange($event)"
-          (sortChange)="onSortChange($event)"
-        ></app-filter-bar>
-      </div>
-
-      <ng-container *ngIf="!(loading$ | async); else loadingTpl">
-        <app-track-list
-          [tracks]="tracks$ | async"
-          (trackSelected)="onTrackSelected($event)"
-        ></app-track-list>
-      </ng-container>
-
-      <ng-template #loadingTpl>
-        <div class="flex justify-center items-center h-64">
-          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      </ng-template>
-    </div>
-  `
+  templateUrl: './library.component.html',
+  styleUrls: ['./library.component.scss']
 })
 export class LibraryComponent implements OnInit {
   tracks$: Observable<any[]>;
   loading$: Observable<boolean>;
-  categories: string[] = ['All', 'Rock', 'Pop', 'Jazz', 'Classical', 'Electronic'];
+  categories = ['All', 'Rock', 'Pop'];
 
   constructor(private store: Store) {
-    this.tracks$ = this.store.select(selectTracks);
-    this.loading$ = this.store.select(selectLoading);
+    this.tracks$ = this.store.select(LibrarySelectors.selectFilteredTracks);
+    this.loading$ = this.store.select(LibrarySelectors.selectLoading);
   }
 
   ngOnInit() {
-    this.store.dispatch(loadTracks());
+    this.store.dispatch(LibraryActions.loadTracks());
   }
 
-  onSearch(query: string) {
-    this.store.dispatch(filterTracks({ query }));
+  onSearch(event: Event) {
+    const searchTerm = (event.target as HTMLInputElement).value;
+    this.store.dispatch(LibraryActions.setLibraryFilters({ searchTerm }));
   }
 
-  onFilterChange(category: string) {
-    this.store.dispatch(filterTracks({ category }));
+  onFilterChange(event: Event) {
+    const category = (event.target as HTMLSelectElement).value;
+    this.store.dispatch(LibraryActions.setLibraryFilters({ category }));
   }
 
-  onSortChange(sortBy: string) {
-    this.store.dispatch(sortTracks({ sortBy }));
+  onSortChange(event: Event) {
+    const sortBy = (event.target as HTMLSelectElement).value;
+    this.store.dispatch(LibraryActions.setLibraryFilters({ sortBy }));
   }
 
   onTrackSelected(track: any) {
-    // Dispatch action to play track
-    this.store.dispatch(setCurrentTrack({ track }));
+    this.store.dispatch(PlayerActions.playTrack({ track }));
   }
 }

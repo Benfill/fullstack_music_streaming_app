@@ -1,5 +1,7 @@
 package io.benfill.isdb.config;
 
+import java.util.Arrays;
+
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import io.benfill.isdb.security.jwt.JwtAuthenticationFilter;
 import io.benfill.isdb.security.services.UserDetailsServiceImpl;
@@ -26,54 +31,72 @@ import io.benfill.isdb.security.services.UserDetailsServiceImpl;
 @Configuration
 public class SecurityConfig {
 
-	@Autowired
-	UserDetailsServiceImpl userDetailsService;
+    @Autowired
+    UserDetailsServiceImpl userDetailsService;
 
-	@Autowired
-	private JwtAuthenticationFilter filter;
+    @Autowired
+    private JwtAuthenticationFilter filter;
 
-	@Bean
-	public SecurityFilterChain configure(HttpSecurity http) throws Exception {
-		http.csrf().disable().httpBasic().and().authorizeRequests().antMatchers("/api/auth/**").permitAll()
-				.antMatchers("/api/user/**").hasAnyRole("USER", "ADMIN").antMatchers("/api/admin/**").hasRole("ADMIN")
-				.anyRequest().authenticated().and().sessionManagement()
-				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and().exceptionHandling()
-				.authenticationEntryPoint((request, response, authException) -> response
-						.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
-				.and().logout().logoutUrl("/api/auth/logout")
-				.logoutSuccessHandler((request, response, authentication) -> {
-					response.setStatus(HttpServletResponse.SC_OK);
-				}).deleteCookies("Authorization").clearAuthentication(true).invalidateHttpSession(true).and()
-				.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
+    @Bean
+    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+	http.cors(cors -> cors.configurationSource(corsConfigurationSource())).csrf().disable().httpBasic().and()
+		.authorizeRequests().antMatchers("/api/auth/**").permitAll().antMatchers("/api/user/**")
+		.hasAnyRole("USER", "ADMIN").antMatchers("/api/admin/**").hasRole("ADMIN").anyRequest().authenticated()
+		.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+		.exceptionHandling()
+		.authenticationEntryPoint((request, response, authException) -> response
+			.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+		.and().logout().logoutUrl("/api/auth/logout")
+		.logoutSuccessHandler((request, response, authentication) -> {
+		    response.setStatus(HttpServletResponse.SC_OK);
+		}).deleteCookies("Authorization").clearAuthentication(true).invalidateHttpSession(true).and()
+		.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
 
-		return http.build();
-	}
+	return http.build();
+    }
 
-	// Disable security
-	@Profile("dev")
-	@Bean
-	public WebSecurityCustomizer webSecurityCustomizer() {
-		return (web) -> web.ignoring().requestMatchers(new AntPathRequestMatcher("/**"));
-	}
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+	CorsConfiguration configuration = new CorsConfiguration();
+	configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+	configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+	configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept",
+		"Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+	configuration
+		.setExposedHeaders(Arrays.asList("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
+	configuration.setAllowCredentials(true);
+	configuration.setMaxAge(3600L);
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder(12);
-	}
+	UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+	source.registerCorsConfiguration("/api/**", configuration);
+	return source;
+    }
 
-	@Bean
-	public DaoAuthenticationProvider authenticationProvider() {
-		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+    // Disable security
+    @Profile("dev")
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+	return (web) -> web.ignoring().requestMatchers(new AntPathRequestMatcher("/**"));
+    }
 
-		authProvider.setUserDetailsService(userDetailsService);
-		authProvider.setPasswordEncoder(passwordEncoder());
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+	return new BCryptPasswordEncoder(12);
+    }
 
-		return authProvider;
-	}
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+	DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-		return authConfig.getAuthenticationManager();
-	}
+	authProvider.setUserDetailsService(userDetailsService);
+	authProvider.setPasswordEncoder(passwordEncoder());
+
+	return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+	return authConfig.getAuthenticationManager();
+    }
 
 }

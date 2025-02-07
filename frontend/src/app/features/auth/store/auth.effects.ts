@@ -1,9 +1,10 @@
+import { AuthState } from './auth.reducer';
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { map, mergeMap, catchError, tap } from 'rxjs/operators';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from 'src/app/features/auth/services/auth.service';
 import * as AuthActions from './auth.actions';
 
 @Injectable()
@@ -11,13 +12,20 @@ export class AuthEffects {
   login$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.login),
+      tap(() => console.log('Login action dispatched')),
       mergeMap(({ credentials }) =>
-        this.authService.login(credentials).pipe(
-          map(response => {
-            this.authService.setAuthToken(response.token);
-            return AuthActions.loginSuccess({ user: response.user, token: response.token });
+        this.authService.login(credentials.username, credentials.password).pipe(
+          tap(response => {
+            console.log('Login response received:', response);
           }),
-          catchError(error => of(AuthActions.loginFailure({ error })))
+          map(response => {
+            console.log('Dispatching loginSuccess with user:', response);
+            return AuthActions.loginSuccess({ user: response });
+          }),
+          catchError(error => {
+            console.error('Login error:', error);
+            return of(AuthActions.loginFailure({ error }));
+          })
         )
       )
     )
@@ -27,7 +35,10 @@ export class AuthEffects {
     () =>
       this.actions$.pipe(
         ofType(AuthActions.loginSuccess),
-        tap(() => this.router.navigate(['/library']))
+        tap(({ user }) => {
+          console.log('LoginSuccess effect triggered with user:', user);
+          this.router.navigate(['/']);
+        })
       ),
     { dispatch: false }
   );
@@ -35,12 +46,9 @@ export class AuthEffects {
   register$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.register),
-      mergeMap(({ userData }) =>
-        this.authService.register(userData).pipe(
-          map(response => {
-            this.authService.setAuthToken(response.token);
-            return AuthActions.registerSuccess({ user: response.user, token: response.token });
-          }),
+      mergeMap(({ userData: {username, password} }) =>
+        this.authService.register(username, password).pipe(
+          map(response => AuthActions.registerSuccess({ user: response.user })),
           catchError(error => of(AuthActions.registerFailure({ error })))
         )
       )
@@ -52,14 +60,8 @@ export class AuthEffects {
       ofType(AuthActions.logout),
       mergeMap(() =>
         this.authService.logout().pipe(
-          map(() => {
-            this.authService.removeAuthToken();
-            return AuthActions.logoutSuccess();
-          }),
-          catchError(() => {
-            this.authService.removeAuthToken();
-            return of(AuthActions.logoutSuccess());
-          })
+          map(() => AuthActions.logoutSuccess()),
+          catchError(() => of(AuthActions.logoutSuccess()))
         )
       )
     )
@@ -73,6 +75,15 @@ export class AuthEffects {
       ),
     { dispatch: false }
   );
+
+  // serverDown$ = createEffect(() => {
+  //   this.actions$.pipe(
+  //     ofType(AuthActions.serverDown),
+  //     mergeMap(() => {
+
+  //     })
+  //   )
+  // })
 
   constructor(
     private actions$: Actions,

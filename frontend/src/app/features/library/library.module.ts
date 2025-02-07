@@ -7,6 +7,8 @@ import { LibraryComponent } from './components/library/library.component';
 import { TrackListComponent } from './components/track-list/track-list.component';
 import { libraryReducer } from './store/library.reducer';
 import { LibraryEffects } from './store/library.effects';
+import { DurationPipe } from '../../shared/pipes/duration.pipe';
+import { CommonModule } from '@angular/common';
 
 const routes: Routes = [
   { path: '', component: LibraryComponent }
@@ -15,13 +17,16 @@ const routes: Routes = [
 @NgModule({
   declarations: [
     LibraryComponent,
+    DurationPipe,
     TrackListComponent
   ],
   imports: [
     SharedModule,
     RouterModule.forChild(routes),
     StoreModule.forFeature('library', libraryReducer),
-    EffectsModule.forFeature([LibraryEffects])
-  ]
+    EffectsModule.forFeature([LibraryEffects]),
+    CommonModule
+  ],
+  exports: [LibraryComponent, TrackListComponent]
 })
 export class LibraryModule { }

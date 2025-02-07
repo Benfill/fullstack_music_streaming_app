@@ -8,6 +8,16 @@ export const selectAlbums = createSelector(
   state => state.filteredAlbums
 );
 
+export const selectSearchResults = createSelector(
+  selectAlbumsState,
+  state => state.searchResults
+);
+
+export const selectIsSearching = createSelector(
+  selectAlbumsState,
+  state => state.searching
+);
+
 export const selectCurrentAlbum = createSelector(
   selectAlbumsState,
   state => state.currentAlbum

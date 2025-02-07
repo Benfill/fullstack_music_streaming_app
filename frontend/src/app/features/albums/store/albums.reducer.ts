@@ -1,20 +1,24 @@
 import { createReducer, on } from '@ngrx/store';
 import * as AlbumsActions from './albums.actions';
-import { Album, ApiError } from '../models/album.model';
+import { Album, ApiError, PaginatedResponse } from '../models/album.model';
 
+export type SortBy = "name" | "artist" | "year" | string | undefined;
+export interface FilterParams {
+  query?: string;
+  category?: string;
+  sortBy?: SortBy;
+  pageSize?: number;
+  pageIndex?: number;
+}
 export interface AlbumsState {
-  albums: Album[];
-  filteredAlbums: Album[];
+  albums: PaginatedResponse<Album> | null;
+  filteredAlbums: PaginatedResponse<Album> | null;
+  searchResults: PaginatedResponse<Album> | null;
   currentAlbum: Album | null;
   loading: boolean;
+  searching: boolean;
   error: ApiError | null;
-  currentFilter: {
-    query?: string;
-    category?: string;
-    sortBy?: 'name' | 'artist' | 'year';
-    pageSize?: number;
-    pageIndex?: number;
-  };
+  currentFilter: FilterParams
   pagination: {
     total: number;
     pageSize: number;
@@ -22,11 +26,14 @@ export interface AlbumsState {
   };
 }
 
+
 export const initialState: AlbumsState = {
-  albums: [],
-  filteredAlbums: [],
+  albums: null,
+  filteredAlbums: null,
+  searchResults: null,
   currentAlbum: null,
   loading: false,
+  searching: false,
   error: null,
   currentFilter: {},
   pagination: {
@@ -76,30 +83,69 @@ export const albumsReducer = createReducer(
     error
   })),
 
-  on(AlbumsActions.filterAlbums, (state, { query, category }) => {
-    const currentFilter = { ...state.currentFilter, query, category };
-    const filteredAlbums = applyFilters(state.albums, currentFilter);
+  on(AlbumsActions.filterAlbums, (state, { params }) => {
+    const currentFilter = { ...state.currentFilter, ...params };
+    const filteredAlbums = state.albums
+      ? applyFilters(state.albums, currentFilter)
+      : null;
+
     return {
       ...state,
       currentFilter,
-      filteredAlbums
+      filteredAlbums,
+      pagination: filteredAlbums ? {
+        total: filteredAlbums.total,
+        pageSize: filteredAlbums.pageSize,
+        pageIndex: filteredAlbums.pageIndex
+      } : state.pagination
     };
   }),
 
-  on(AlbumsActions.sortAlbums, (state, { sortBy }) => {
-    const currentFilter = { ...state.currentFilter, sortBy };
-    const filteredAlbums = applyFilters(state.albums, currentFilter);
+  on(AlbumsActions.sortAlbums, (state, { params }) => {
+    const currentFilter = { ...state.currentFilter, ...params };
+    const filteredAlbums = state.albums
+      ? applyFilters(state.albums, currentFilter)
+      : null;
+
     return {
       ...state,
       currentFilter,
-      filteredAlbums
+      filteredAlbums,
+      pagination: filteredAlbums ? {
+        total: filteredAlbums.total,
+        pageSize: filteredAlbums.pageSize,
+        pageIndex: filteredAlbums.pageIndex
+      } : state.pagination
     };
-  })
+  }),
+
+  on(AlbumsActions.searchAlbums, state => ({
+    ...state,
+    searching: true,
+    error: null
+  })),
+
+  on(AlbumsActions.searchAlbumsSuccess, (state, { response }) => ({
+    ...state,
+    searchResults: response,
+    searching: false
+  })),
+
+  on(AlbumsActions.searchAlbumsFailure, (state, { error }) => ({
+    ...state,
+    searching: false,
+    error
+  }))
+
 );
 
-function applyFilters(albums: Album[], filter: any) {
-  let result = [...albums];
+function applyFilters(
+  paginatedAlbums: PaginatedResponse<Album>,
+  filter: FilterParams
+): PaginatedResponse<Album> {
+  let result = [...paginatedAlbums.items];
 
+  // Apply filtering
   if (filter.query) {
     const query = filter.query.toLowerCase();
     result = result.filter(album =>
@@ -112,6 +158,7 @@ function applyFilters(albums: Album[], filter: any) {
     result = result.filter(album => album.category === filter.category);
   }
 
+  // Apply sorting
   if (filter.sortBy) {
     result = result.sort((a, b) => {
       switch (filter.sortBy) {
@@ -127,5 +174,18 @@ function applyFilters(albums: Album[], filter: any) {
     });
   }
 
-  return result;
+  // Apply pagination
+  const pageSize = filter.pageSize || paginatedAlbums.pageSize;
+  const pageIndex = filter.pageIndex || paginatedAlbums.pageIndex;
+  const start = pageIndex * pageSize;
+  const paginatedItems = result.slice(start, start + pageSize);
+
+  // Return paginated response
+  return {
+    items: paginatedItems,
+    total: result.length,
+    pageSize,
+    pageIndex
+  };
 }
+

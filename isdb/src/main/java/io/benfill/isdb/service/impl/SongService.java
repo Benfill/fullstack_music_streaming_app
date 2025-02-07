@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.apache.tika.Tika;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -15,7 +16,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.core.io.InputStreamResource;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 
@@ -51,7 +51,7 @@ public class SongService implements ISongService {
 
     @Override
     public List<SongDtoResp> getAll(Integer page) {
-	int size = 3;
+	int size = 10;
 	Pageable pageable = PageRequest.of(page, size);
 	List<Song> songs = repository.findAll(pageable).getContent();
 	List<SongDtoResp> dtos = mapper.entitiesToDtos(songs);
@@ -104,14 +104,11 @@ public class SongService implements ISongService {
 	}
 
 	String fileFormat = new Tika().detect(inputStream);
-	
+
 	// Create InputStreamResource from the InputStream
 	InputStreamResource resource = new InputStreamResource(inputStream);
 
-	return AudioResp.builder()
-		.format(fileFormat)
-		.song(resource)
-		.build();
+	return AudioResp.builder().format(fileFormat).song(resource).build();
     }
 
     @Override
@@ -162,6 +159,6 @@ public class SongService implements ISongService {
 	Pageable pageable = PageRequest.of(page, size);
 	List<Song> songs = repository.findByTitleLike("%" + query + "%", pageable);
 	return mapper.entitiesToDtos(songs);
-  }
+    }
 
 }

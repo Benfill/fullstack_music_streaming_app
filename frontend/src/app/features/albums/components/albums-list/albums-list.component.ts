@@ -1,8 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
-import { loadAlbums, filterAlbums, sortAlbums } from '../../store/albums.actions';
+import { loadAlbums } from '../../store/albums.actions';
 import { selectAlbums, selectLoading } from '../../store/albums.selectors';
+import * as  AlbumsActions from '../../store/albums.actions';
+import { Album, PaginatedResponse } from '../../models/album.model';
+import { SortBy } from '../../store/albums.reducer';
 
 @Component({
   selector: 'app-albums-list',
@@ -26,7 +29,7 @@ import { selectAlbums, selectLoading } from '../../store/albums.selectors';
       <ng-container *ngIf="!(loading$ | async); else loadingTpl">
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <div
-            *ngFor="let album of albums$ | async"
+            *ngFor="let album of (albums$ | async)?.items ?? []"
             class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
             [routerLink]="['/albums', album.id]"
           >
@@ -39,7 +42,7 @@ import { selectAlbums, selectLoading } from '../../store/albums.selectors';
               <h3 class="text-lg font-semibold dark:text-white">{{ album.title }}</h3>
               <p class="text-gray-600 dark:text-gray-300">{{ album.artist }}</p>
               <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ album.year }} • {{ album.tracks.length }} tracks
+                {{ album.year }} • {{ album.songs.length }} tracks
               </p>
             </div>
           </div>
@@ -55,7 +58,7 @@ import { selectAlbums, selectLoading } from '../../store/albums.selectors';
   `
 })
 export class AlbumsListComponent implements OnInit {
-  albums$: Observable<any[]>;
+  albums$: Observable<PaginatedResponse<Album> | null>;
   loading$: Observable<boolean>;
   categories: string[] = ['All', 'Rock', 'Pop', 'Jazz', 'Classical', 'Electronic'];
 
@@ -68,15 +71,15 @@ export class AlbumsListComponent implements OnInit {
     this.store.dispatch(loadAlbums());
   }
 
-  onSearch(query: string) {
-    this.store.dispatch(filterAlbums({ query }));
+  onSearch(event: string) {
+    this.store.dispatch(AlbumsActions.searchAlbums({params: { query: event }}));
   }
 
-  onFilterChange(category: string) {
-    this.store.dispatch(filterAlbums({ category }));
+  onFilterChange(event: string) {
+    this.store.dispatch(AlbumsActions.filterAlbums({ params: {category: event} }));
   }
 
-  onSortChange(sortBy: string) {
-    this.store.dispatch(sortAlbums({ sortBy }));
+  onSortChange(event: SortBy) {
+    this.store.dispatch(AlbumsActions.sortAlbums({params:{ sortBy: event }}));
   }
 }

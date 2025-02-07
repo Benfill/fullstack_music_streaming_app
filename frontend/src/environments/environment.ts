@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
   api: {
-    baseUrl: 'http://localhost:3000/api',
+    baseUrl: 'http://localhost:8080/api',
     endpoints: {
       albums: {
         base: '/user/albums',
@@ -16,7 +16,7 @@ export const environment = {
       songs: {
         base: '/user/songs',
         search: '/user/songs/search',
-        audio: '/songs/:fileId/audio'
+        audio: '/songs'
       },
       admin: {
         albums: '/admin/albums',

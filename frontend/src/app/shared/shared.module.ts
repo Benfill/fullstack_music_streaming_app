@@ -2,12 +2,13 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { SearchBarComponent } from './components/search-bar/search-bar.component';
-import { FilterBarComponent } from './components/filter-bar/filter-bar.component';
+import { FilterSortBarComponent } from './components/filter-bar/filter-bar.component';
+import { TrackListComponent } from '../features/library/components/track-list/track-list.component';
 
 @NgModule({
   declarations: [
     SearchBarComponent,
-    FilterBarComponent
+    FilterSortBarComponent
   ],
   imports: [
     CommonModule,
@@ -17,7 +18,7 @@ import { FilterBarComponent } from './components/filter-bar/filter-bar.component
     CommonModule,
     ReactiveFormsModule,
     SearchBarComponent,
-    FilterBarComponent
+    FilterSortBarComponent
   ]
 })
 export class SharedModule { }
