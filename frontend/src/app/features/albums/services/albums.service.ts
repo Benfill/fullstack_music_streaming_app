@@ -23,7 +23,22 @@ export class AlbumsService {
       if (params.sortBy) httpParams = httpParams.set('sortBy', params.sortBy);
     }
 
-    return this.http.get<PaginatedResponse<Album>>(this.baseUrl, { params: httpParams });
+    return this.http.get<Album[] | PaginatedResponse<Album>>(this.baseUrl, { params: httpParams })
+      .pipe(
+        map(response => {
+          // If response is an array, convert it to PaginatedResponse format
+          if (Array.isArray(response)) {
+            return {
+              items: response,
+              total: response.length,
+              pageSize: response.length,
+              pageIndex: 0
+            };
+          }
+          // If it's already a PaginatedResponse, return as is
+          return response;
+        })
+      );
   }
 
   getAlbumById(id: string): Observable<Album> {
