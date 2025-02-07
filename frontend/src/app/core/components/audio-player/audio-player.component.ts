@@ -1,8 +1,11 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit, AfterViewInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject, Subject } from 'rxjs';
 import { selectCurrentTrack, selectIsPlaying } from '../../store/player/player.selectors';
-import { playTrack, pauseTrack, seekTrack } from '../../store/player/player.actions';
+import { playTrack, pauseTrack, resumeTrack, seekTrack, setVolume } from '../../store/player/player.actions';
+import { AsyncPipe } from '@angular/common';
+import { take, filter, map, takeUntil } from 'rxjs/operators';
+import { environment } from '@environments/environment';
 
 @Component({
   selector: 'app-audio-player',
@@ -13,9 +16,9 @@ import { playTrack, pauseTrack, seekTrack } from '../../store/player/player.acti
           <!-- Track Info -->
           <div class="flex items-center space-x-4">
             <img
-              [src]="(currentTrack$ | async)?.albumCover || 'assets/default-album.png'"
+              [src]="(currentTrack$ | async)?.albumCover || 'https://placehold.co/48x48/gray/white?text=♪'"
               alt="Album Cover"
-              class="w-12 h-12 rounded"
+              class="w-12 h-12 rounded object-cover"
             >
             <div>
               <h3 class="text-sm font-medium dark:text-white">
@@ -83,42 +86,143 @@ import { playTrack, pauseTrack, seekTrack } from '../../store/player/player.acti
         </div>
       </div>
 
-      <audio #audioPlayer (timeupdate)="onTimeUpdate()" (loadedmetadata)="onMetadataLoaded()">
-        <source [src]="(currentTrack$ | async)?.url" type="audio/mpeg">
+      <audio #audioPlayer
+             (timeupdate)="onTimeUpdate()"
+             (loadedmetadata)="onMetadataLoaded()"
+             (error)="onAudioError($event)">
+        <source [src]="audioUrl$ | async" type="audio/mpeg">
+        Your browser does not support the audio element.
       </audio>
     </div>
   `
 })
-export class AudioPlayerComponent implements OnInit {
+export class AudioPlayerComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('audioPlayer') audioPlayer!: ElementRef<HTMLAudioElement>;
 
   currentTrack$: Observable<any>;
   isPlaying$: Observable<boolean>;
+  audioUrl$: Observable<string>;
+  private audioUrlSubject = new BehaviorSubject<string>('');
+  private destroy$ = new Subject<void>();
+
   duration: number = 0;
   currentTime: number = 0;
   volume: number = 100;
 
-  constructor(private store: Store) {
+  constructor(
+    private store: Store,
+    private cdr: ChangeDetectorRef
+  ) {
     this.currentTrack$ = this.store.select(selectCurrentTrack);
     this.isPlaying$ = this.store.select(selectIsPlaying);
+    this.audioUrl$ = this.audioUrlSubject.asObservable();
   }
 
   ngOnInit() {
-    this.isPlaying$.subscribe(isPlaying => {
-      if (isPlaying) {
-        this.audioPlayer.nativeElement.play();
-      } else {
-        this.audioPlayer.nativeElement.pause();
-      }
+    // Initialize audio URL based on current track
+    this.currentTrack$.pipe(
+      filter(track => !!track?.id),
+      takeUntil(this.destroy$)
+    ).subscribe(track => {
+      const url = this.formatAudioUrl(track);
+      this.audioUrlSubject.next(url);
     });
   }
 
-  togglePlay() {
-    if (this.audioPlayer.nativeElement.paused) {
-      this.store.dispatch(playTrack());
-    } else {
-      this.store.dispatch(pauseTrack());
+  private formatAudioUrl(track: any): string {
+    if (!track) return '';
+
+    if (track.audioUrl) {
+      return track.audioUrl;
     }
+
+    // Ensure the URL is properly formatted
+    const baseUrl = environment.api.baseUrl;
+    const fileId = track.fileId || track.id;
+    return `${baseUrl}/${fileId}/audio`;
+  }
+
+  ngAfterViewInit() {
+    // Subscribe to track changes
+    this.currentTrack$.pipe(
+      filter(track => !!track?.url),
+      takeUntil(this.destroy$)
+    ).subscribe(track => {
+      const url = this.formatAudioUrl(track);
+      console.log(track.url);
+
+      this.audioUrlSubject.next(track.url);
+
+      // Reset audio player state
+      this.resetAudioPlayer();
+
+      // Handle playback
+      this.handlePlayback(track);
+    });
+
+    // Handle play/pause state changes
+    this.isPlaying$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(this.handlePlaybackState.bind(this));
+  }
+
+  private resetAudioPlayer() {
+    const audio = this.audioPlayer.nativeElement;
+    audio.pause();
+    audio.currentTime = 0;
+    this.currentTime = 0;
+    this.duration = 0;
+  }
+
+  private async handlePlayback(track: any) {
+    if (!this.audioPlayer?.nativeElement) return;
+
+    try {
+      await this.audioPlayer.nativeElement.load();
+
+      const isPlaying = await this.isPlaying$.pipe(take(1)).toPromise();
+      if (track.autoplay || isPlaying) {
+        const playPromise = this.audioPlayer.nativeElement.play();
+        if (playPromise) {
+          await playPromise;
+        }
+      }
+    } catch (error) {
+      console.error('Error during audio playback:', error);
+      // Consider dispatching an error action to the store here
+    }
+  }
+
+  private async handlePlaybackState(isPlaying: boolean) {
+    if (!this.audioPlayer?.nativeElement) return;
+
+    try {
+      if (isPlaying) {
+        const playPromise = this.audioPlayer.nativeElement.play();
+        if (playPromise) {
+          await playPromise;
+        }
+      } else {
+        this.audioPlayer.nativeElement.pause();
+      }
+    } catch (error) {
+      console.error('Error toggling play state:', error);
+    }
+  }
+
+  togglePlay() {
+    this.currentTrack$.pipe(take(1)).subscribe(track => {
+      if (!track) {
+        console.warn('No track selected to play');
+        return;
+      }
+
+      if (this.audioPlayer.nativeElement.paused) {
+        this.store.dispatch(resumeTrack());
+      } else {
+        this.store.dispatch(pauseTrack());
+      }
+    });
   }
 
   onSeek(event: Event) {
@@ -130,13 +234,39 @@ export class AudioPlayerComponent implements OnInit {
   onVolumeChange(event: Event) {
     this.volume = +(event.target as HTMLInputElement).value;
     this.audioPlayer.nativeElement.volume = this.volume / 100;
+    this.store.dispatch(setVolume({ volume: this.volume }));
   }
 
   onTimeUpdate() {
     this.currentTime = this.audioPlayer.nativeElement.currentTime;
+    this.cdr.detectChanges();
   }
 
   onMetadataLoaded() {
     this.duration = this.audioPlayer.nativeElement.duration;
+    this.cdr.detectChanges();
+  }
+
+  onAudioError(event: any) {
+    console.error('Audio playback error:', event);
+    const audio = this.audioPlayer.nativeElement;
+
+    // Enhanced error logging
+    const errorDetails = {
+      source: audio.currentSrc,
+      readyState: audio.readyState,
+      networkState: audio.networkState,
+      error: audio.error ? {
+        code: audio.error.code,
+        message: audio.error.message
+      } : null
+    };
+
+    console.error('Audio error details:', errorDetails);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

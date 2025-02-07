@@ -3,14 +3,12 @@ import * as AuthActions from './auth.actions';
 
 export interface AuthState {
   user: any | null;
-  token: string | null;
   loading: boolean;
   error: any | null;
 }
 
 export const initialState: AuthState = {
   user: null,
-  token: null,
   loading: false,
   error: null
 };
@@ -24,13 +22,15 @@ export const authReducer = createReducer(
     error: null
   })),
 
-  on(AuthActions.loginSuccess, (state, { user, token }) => ({
-    ...state,
-    user,
-    token,
-    loading: false,
-    error: null
-  })),
+  on(AuthActions.loginSuccess, (state, { user }) => {
+    console.log('Auth reducer handling loginSuccess with user:', user);
+    return {
+      ...state,
+      user,
+      loading: false,
+      error: null
+    };
+  }),
 
   on(AuthActions.loginFailure, (state, { error }) => ({
     ...state,
@@ -38,10 +38,9 @@ export const authReducer = createReducer(
     error
   })),
 
-  on(AuthActions.logout, state => ({
+  on(AuthActions.logoutSuccess, state => ({
     ...state,
     user: null,
-    token: null,
     loading: false,
     error: null
   }))

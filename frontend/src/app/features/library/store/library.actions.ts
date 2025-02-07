@@ -12,12 +12,11 @@ export const loadTracksFailure = createAction(
   props<{ error: any }>()
 );
 
-export const filterTracks = createAction(
-  '[Library] Filter Tracks',
-  props<{ query?: string; category?: string }>()
-);
-
-export const sortTracks = createAction(
-  '[Library] Sort Tracks',
-  props<{ sortBy: string }>()
+export const setLibraryFilters = createAction(
+  '[Library] Set Filters',
+  props<{
+    searchTerm?: string;
+    category?: string;
+    sortBy?: string
+  }>()
 );

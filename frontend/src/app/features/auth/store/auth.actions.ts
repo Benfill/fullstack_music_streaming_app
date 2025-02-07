@@ -2,12 +2,12 @@ import { createAction, props } from '@ngrx/store';
 
 export const login = createAction(
   '[Auth] Login',
-  props<{ credentials: { email: string; password: string } }>()
+  props<{ credentials: { username: string; password: string } }>()
 );
 
 export const loginSuccess = createAction(
   '[Auth] Login Success',
-  props<{ user: any; token: string }>()
+  props<{ user: any }>()
 );
 
 export const loginFailure = createAction(
@@ -25,10 +25,15 @@ export const register = createAction(
 
 export const registerSuccess = createAction(
   '[Auth] Register Success',
-  props<{ user: any; token: string }>()
+  props<{ user: any }>()
 );
 
 export const registerFailure = createAction(
   '[Auth] Register Failure',
   props<{ error: any }>()
 );
+
+// export const serverDown = createAction(
+//   '[Library] Server Down',
+//   props<{serverDown: boolean}>()
+// )

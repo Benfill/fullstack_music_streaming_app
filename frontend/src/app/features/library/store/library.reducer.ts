@@ -2,98 +2,62 @@ import { createReducer, on } from '@ngrx/store';
 import * as LibraryActions from './library.actions';
 
 export interface LibraryState {
-  tracks: any[];
-  filteredTracks: any[];
+  tracks: {
+    id: string;
+    title: string;
+    artist: string;
+    duration: number;
+    url: string;
+    category: string;
+    albumCover?: string;
+    album: string;
+  }[];
   loading: boolean;
-  error: any | null;
-  currentFilter: {
-    query?: string;
-    category?: string;
-    sortBy?: string;
+  error: any;
+  filters: {
+    searchTerm: string;
+    category: string;
+    sortBy: string;
   };
 }
 
 export const initialState: LibraryState = {
   tracks: [],
-  filteredTracks: [],
   loading: false,
   error: null,
-  currentFilter: {}
+  filters: {
+    searchTerm: '',
+    category: 'All',
+    sortBy: 'title'
+  }
 };
 
 export const libraryReducer = createReducer(
   initialState,
-
   on(LibraryActions.loadTracks, state => ({
     ...state,
     loading: true,
     error: null
   })),
-
   on(LibraryActions.loadTracksSuccess, (state, { tracks }) => ({
     ...state,
+    loading: false,
     tracks,
-    filteredTracks: tracks,
-    loading: false
+    error: null
   })),
-
   on(LibraryActions.loadTracksFailure, (state, { error }) => ({
     ...state,
     loading: false,
+    tracks: [],
     error
   })),
-
-  on(LibraryActions.filterTracks, (state, { query, category }) => {
-    const currentFilter = { ...state.currentFilter, query, category };
-    const filteredTracks = applyFilters(state.tracks, currentFilter);
-    return {
-      ...state,
-      currentFilter,
-      filteredTracks
-    };
-  }),
-
-  on(LibraryActions.sortTracks, (state, { sortBy }) => {
-    const currentFilter = { ...state.currentFilter, sortBy };
-    const filteredTracks = applyFilters(state.tracks, currentFilter);
-    return {
-      ...state,
-      currentFilter,
-      filteredTracks
-    };
-  })
+  on(LibraryActions.setLibraryFilters, (state, { searchTerm, category, sortBy }) => ({
+    ...state,
+    filters: {
+      ...state.filters,
+      ...(searchTerm !== undefined && { searchTerm }),
+      ...(category !== undefined && { category }),
+      ...(sortBy !== undefined && { sortBy })
+    }
+  }))
 );
-
-function applyFilters(tracks: any[], filter: any) {
-  let result = [...tracks];
-
-  if (filter.query) {
-    const query = filter.query.toLowerCase();
-    result = result.filter(track =>
-      track.title.toLowerCase().includes(query) ||
-      track.artist.toLowerCase().includes(query) ||
-      track.album.toLowerCase().includes(query)
-    );
-  }
-
-  if (filter.category && filter.category !== 'All') {
-    result = result.filter(track => track.category === filter.category);
-  }
-
-  if (filter.sortBy) {
-    result = result.sort((a, b) => {
-      switch (filter.sortBy) {
-        case 'name':
-          return a.title.localeCompare(b.title);
-        case 'artist':
-          return a.artist.localeCompare(b.artist);
-        case 'duration':
-          return a.duration - b.duration;
-        default:
-          return 0;
-      }
-    });
-  }
-
-  return result;
-}

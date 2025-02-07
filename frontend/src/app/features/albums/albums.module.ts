@@ -1,5 +1,4 @@
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { SharedModule } from '../../shared/shared.module';
@@ -7,22 +6,26 @@ import { AlbumsListComponent } from './components/albums-list/albums-list.compon
 import { AlbumDetailComponent } from './components/album-detail/album-detail.component';
 import { albumsReducer } from './store/albums.reducer';
 import { AlbumsEffects } from './store/albums.effects';
-
-const routes: Routes = [
-  { path: '', component: AlbumsListComponent },
-  { path: ':id', component: AlbumDetailComponent }
-];
+import { CommonModule } from '@angular/common';
+import { AlbumFormComponent } from './components/album-form/album-form.component';
+import { LibraryModule } from '../library/library.module';
+import { AlbumsRoutingModule } from './albums-routing.module';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
     AlbumsListComponent,
-    AlbumDetailComponent
+    AlbumDetailComponent,
+    AlbumFormComponent,
   ],
   imports: [
+    CommonModule,
     SharedModule,
-    RouterModule.forChild(routes),
+    LibraryModule,
+    AlbumsRoutingModule,
     StoreModule.forFeature('albums', albumsReducer),
-    EffectsModule.forFeature([AlbumsEffects])
+    EffectsModule.forFeature([AlbumsEffects]),
+    ReactiveFormsModule
   ]
 })
 export class AlbumsModule { }

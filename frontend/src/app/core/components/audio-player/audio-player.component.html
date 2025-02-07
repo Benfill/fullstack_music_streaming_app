@@ -1,0 +1,10 @@
+<div class="audio-player">
+  <audio #audioPlayer
+         (timeupdate)="onTimeUpdate()"
+         (loadedmetadata)="onMetadataLoaded()"
+         (error)="onAudioError($event)">
+    <source [src]="(currentTrack$ | async)?.url" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  <!-- ... rest of the player controls ... -->
+</div>

@@ -1,6 +1,12 @@
 import { createAction, props } from '@ngrx/store';
 
-export const playTrack = createAction('[Player] Play Track');
+export const playTrack = createAction(
+
+  '[Player] Play Track',
+
+  props<{ track: any }>()
+
+);
 export const pauseTrack = createAction('[Player] Pause Track');
 export const seekTrack = createAction(
   '[Player] Seek Track',
@@ -23,4 +29,8 @@ export const setVolume = createAction(
 export const setPlaylist = createAction(
   '[Player] Set Playlist',
   props<{ tracks: any[]; currentIndex: number }>()
+);
+
+export const resumeTrack = createAction(
+  '[Player] Resume Track'
 );

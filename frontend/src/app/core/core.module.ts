@@ -5,9 +5,12 @@ import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { HeaderComponent } from './components/header/header.component';
 import { AudioPlayerComponent } from './components/audio-player/audio-player.component';
-import { SharedModule } from '../shared/shared.module';
 import { playerReducer } from './store/player/player.reducer';
 import { PlayerEffects } from './store/player/player.effects';
+import { authReducer } from '../features/auth/store/auth.reducer';
+import { albumsReducer } from '../features/albums/store/albums.reducer';
+import { libraryReducer } from '../features/library/store/library.reducer';
+import { AuthEffects } from '../features/auth/store/auth.effects';
 
 @NgModule({
   declarations: [
@@ -17,9 +20,13 @@ import { PlayerEffects } from './store/player/player.effects';
   imports: [
     CommonModule,
     RouterModule,
-    SharedModule,
-    StoreModule.forFeature('player', playerReducer),
-    EffectsModule.forFeature([PlayerEffects])
+    StoreModule.forRoot({
+      auth: authReducer,
+      albums: albumsReducer,
+      library: libraryReducer,
+      player: playerReducer
+    }),
+    EffectsModule.forRoot([PlayerEffects, AuthEffects])
   ],
   exports: [
     HeaderComponent,

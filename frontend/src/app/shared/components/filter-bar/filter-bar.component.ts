@@ -26,7 +26,7 @@ import { Component, Output, EventEmitter, Input } from '@angular/core';
     </div>
   `
 })
-export class FilterBarComponent {
+export class FilterSortBarComponent {
   @Input() categories: string[] = [];
   @Output() filterChange = new EventEmitter<string>();
   @Output() sortChange = new EventEmitter<string>();

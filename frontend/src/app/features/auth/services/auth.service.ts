@@ -1,37 +1,51 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { environment } from '@environments/environment';
+
+interface AuthResponse {
+  token: string;
+  user: {
+    id: string;
+    username: string;
+    roles: string[];
+  };
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = `${environment.apiUrl}/api/auth`;
+  private baseUrl = environment.api.baseUrl;
+  private endpoints = environment.api.endpoints.auth;
 
   constructor(private http: HttpClient) {}
 
-  login(credentials: { email: string; password: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, credentials);
+  login(username: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}${this.endpoints.login}`, {
+      username,
+      password
+    }, { withCredentials: true });
   }
 
-  register(userData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, userData);
+  register(username: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}${this.endpoints.register}`, {
+      username,
+      password
+    }, { withCredentials: true });
   }
 
-  logout(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/logout`, {});
+  logout(): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}${this.endpoints.logout}`, {}, { withCredentials: true });
   }
 
-  setAuthToken(token: string): void {
-    localStorage.setItem('token', token);
+  isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    return user?.roles.includes('ROLE_ADMIN') ?? false;
   }
 
-  getAuthToken(): string | null {
-    return localStorage.getItem('token');
-  }
-
-  removeAuthToken(): void {
-    localStorage.removeItem('token');
+  private getCurrentUser(): AuthResponse['user'] | null {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '@environments/environment';
+import { environment } from '../../../../environments/environment';
 import { Album, PaginatedResponse, AlbumSearchParams } from '../models/album.model';
 
 @Injectable({
@@ -16,7 +16,7 @@ export class AlbumsService {
 
   getAlbums(params?: Partial<AlbumSearchParams>): Observable<PaginatedResponse<Album>> {
     let httpParams = new HttpParams();
-
+    
     if (params) {
       if (params.pageSize) httpParams = httpParams.set('pageSize', params.pageSize.toString());
       if (params.pageIndex) httpParams = httpParams.set('pageIndex', params.pageIndex.toString());

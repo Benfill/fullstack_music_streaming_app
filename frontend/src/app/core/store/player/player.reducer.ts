@@ -76,5 +76,10 @@ export const playerReducer = createReducer(
       currentTrack: state.playlist[previousIndex],
       isPlaying: true
     };
-  })
+  }),
+
+  on(PlayerActions.resumeTrack, state => ({
+    ...state,
+    isPlaying: true
+  }))
 );
