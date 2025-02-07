@@ -20,7 +20,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
         <div class="col-span-1 flex items-center">{{ i + 1 }}</div>
         <div class="col-span-4 flex items-center">
           <img
-            [src]="track.albumCover"
+            src="https://i.ibb.co/d4wcLJ23/461146.png"
             alt="Album Cover"
             class="w-10 h-10 rounded mr-3"
           >
