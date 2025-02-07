@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Album, PaginatedResponse, AlbumSearchParams } from '../models/album.model';
 
@@ -16,7 +16,7 @@ export class AlbumsService {
 
   getAlbums(params?: Partial<AlbumSearchParams>): Observable<PaginatedResponse<Album>> {
     let httpParams = new HttpParams();
-    
+
     if (params) {
       if (params.pageSize) httpParams = httpParams.set('pageSize', params.pageSize.toString());
       if (params.pageIndex) httpParams = httpParams.set('pageIndex', params.pageIndex.toString());
@@ -26,7 +26,6 @@ export class AlbumsService {
     return this.http.get<Album[] | PaginatedResponse<Album>>(this.baseUrl, { params: httpParams })
       .pipe(
         map(response => {
-          // If response is an array, convert it to PaginatedResponse format
           if (Array.isArray(response)) {
             return {
               items: response,
@@ -35,7 +34,6 @@ export class AlbumsService {
               pageIndex: 0
             };
           }
-          // If it's already a PaginatedResponse, return as is
           return response;
         })
       );

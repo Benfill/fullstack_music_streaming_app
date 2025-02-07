@@ -4,6 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { Router } from '@angular/router';
 import { ADMIN_API_ENDPOINTS } from '../../models/album.model';
+import { AlbumsService } from '../../services/albums.service';
+import { Album } from '../../models/album.model';
 
 @Component({
   selector: 'app-album-form',
@@ -102,15 +104,28 @@ import { ADMIN_API_ENDPOINTS } from '../../models/album.model';
           </div>
 
           <div class="space-y-2">
-            <label for="albumId" class="block text-sm font-medium text-gray-700">Album ID</label>
-            <input
+            <label for="albumId" class="block text-sm font-medium text-gray-700">Album</label>
+            <select
               id="albumId"
-              type="text"
               formControlName="albumId"
+              [disabled]="loading"
               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+              <option value="">{{ loading ? 'Loading albums...' : 'Select an album' }}</option>
+              <ng-container *ngIf="!loading && albums">
+                <option *ngFor="let album of albums" [value]="album.id">
+                  {{album.title}} - {{album.artist}} ({{album.year}})
+                </option>
+              </ng-container>
+            </select>
+            <span *ngIf="loadError" class="text-sm text-red-600">
+              {{loadError}}
+            </span>
+            <span *ngIf="!loading && !loadError && albums.length === 0" class="text-sm text-gray-500">
+              No albums available. Please create an album first.
+            </span>
             <span *ngIf="musicForm.get('albumId')?.errors?.['required'] && musicForm.get('albumId')?.touched"
                   class="text-sm text-red-600">
-              Album's id is required
+              Album selection is required
             </span>
           </div>
 
@@ -156,11 +171,15 @@ export class AlbumFormComponent implements OnInit {
   fileError: string | null = null;
   isFileValid = false;
   selectedFile: File | null = null;
+  albums: Album[] = [];
+  loading = false;
+  loadError: string | null = null;
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private albumsService: AlbumsService
   ) {
     this.musicForm = this.fb.group({
       title: ['', Validators.required]
@@ -177,6 +196,11 @@ export class AlbumFormComponent implements OnInit {
     this.fileError = null;
     this.isFileValid = false;
     this.selectedFile = null;
+
+    // Load albums when switching to song form
+    if (type === 'song') {
+      this.loadAlbums();
+    }
   }
 
   private initializeForm() {
@@ -194,6 +218,27 @@ export class AlbumFormComponent implements OnInit {
         albumId: ['', Validators.required],
       });
     }
+  }
+
+  private loadAlbums() {
+    this.loading = true;
+    this.loadError = null;
+
+    this.albumsService.getAlbums().subscribe({
+      next: (response) => {
+        if (Array.isArray(response)) {
+          this.albums = response;
+        } else {
+          this.albums = response.items;
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading albums:', error);
+        this.loadError = 'Failed to load albums. Please try again.';
+        this.loading = false;
+      }
+    });
   }
 
   onFileSelected(event: Event) {
