@@ -11,7 +11,7 @@ import { logout } from '../../../features/auth/store/auth.actions';
           <!-- Logo/Brand -->
           <div class="flex items-center">
             <a routerLink="/" class="text-xl font-bold text-gray-800 dark:text-white">
-              Music App
+            Musify
             </a>
           </div>
 
