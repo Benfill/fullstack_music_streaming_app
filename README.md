@@ -1,4 +1,4 @@
-# Music Streaming Application (Full-Stack)
+# Musify - Music Streaming Application (Full-Stack)
 
 This repository contains a complete full-stack music streaming application built using **Spring Boot** for the backend and **Angular** for the frontend. The project integrates the two separate components into a single cohesive application, providing features like album and song management, user authentication, and an integrated audio player for seamless music playback.
 
